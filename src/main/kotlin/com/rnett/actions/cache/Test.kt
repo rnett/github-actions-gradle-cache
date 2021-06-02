@@ -13,6 +13,8 @@ fun main() {
 
         val resource = "cache?keys=$key&version=$key"
 
+        println("Env: ${System.getenv()}")
+
         val baseUrl = (System.getenv("ACTIONS_CACHE_URL")?.ifBlank { null }
             ?: System.getenv("ACTIONS_RUNTIME_URL")?.ifBlank { null }
                 )?.replace("pipelines", "artifactcache")
