@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     kotlin("jvm") version "1.5.10"
     application
-//    `java-gradle-plugin`
+    `java-gradle-plugin`
 }
 
 group = "com.github.rnett.github-actions-gradle-cache"
@@ -14,7 +14,8 @@ repositories {
 }
 
 dependencies {
-    implementation("io.ktor:ktor-client:1.6.0")
+//    implementation("io.ktor:ktor-client:1.6.0")
+//    implementation("io.ktor:ktor-client-apache:1.6.0")
 
     testImplementation(kotlin("test"))
 }
