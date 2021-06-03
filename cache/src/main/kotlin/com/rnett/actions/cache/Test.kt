@@ -4,26 +4,24 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.gradle.internal.impldep.com.fasterxml.jackson.annotation.JsonAutoDetect
-import org.gradle.internal.impldep.com.fasterxml.jackson.annotation.JsonCreator
-import org.gradle.internal.impldep.com.fasterxml.jackson.annotation.JsonProperty
-import org.gradle.internal.impldep.com.fasterxml.jackson.annotation.PropertyAccessor
-import org.gradle.internal.impldep.com.fasterxml.jackson.databind.ObjectMapper
 import org.gradle.internal.impldep.org.apache.http.HttpResponse
 import org.gradle.internal.impldep.org.apache.http.client.methods.*
-import org.gradle.internal.impldep.org.apache.http.entity.ByteArrayEntity
 import org.gradle.internal.impldep.org.apache.http.entity.ContentType
+import org.gradle.internal.impldep.org.apache.http.entity.InputStreamEntity
 import org.gradle.internal.impldep.org.apache.http.entity.StringEntity
 import org.gradle.internal.impldep.org.apache.http.impl.client.CloseableHttpClient
 import org.gradle.internal.impldep.org.apache.http.impl.client.HttpClients
 import org.gradle.internal.impldep.org.apache.http.message.BasicNameValuePair
+import org.slf4j.LoggerFactory
+import java.io.ByteArrayInputStream
+import java.io.InputStream
 
 @Serializable
 data class CacheEntry(
-    val cacheKey: String?,
-    val scope: String?,
-    val creationTime: String?,
-    val archiveLocation: String?,
+    val cacheKey: String,
+    val scope: String,
+    val creationTime: String,
+    val archiveLocation: String,
     val cacheVersion: String
 )
 
@@ -41,14 +39,21 @@ fun HttpResponse.isSuccess() = statusLine.statusCode in 200 until 300
 class CacheClient(
     val baseUrl: String,
     val token: String,
-    val json: Json = Json {  }
+    val json: Json = Json { ignoreUnknownKeys = true }
 ) : AutoCloseable {
+
+    companion object {
+        const val userAgent = "Gradle Actions Cache"
+    }
+
     val client: CloseableHttpClient = HttpClients.createMinimal()
+
+    val logger = LoggerFactory.getLogger(CacheClient::class.java)
 
     fun url(resource: String) = "$baseUrl$resource"
 
     fun HttpUriRequest.setup() = apply {
-        addHeader("User-Agent", "Gradle Actions Cache")
+        addHeader("User-Agent", userAgent)
         addHeader("Authorization", "Bearer $token")
         addHeader(
             "Accept",
@@ -61,7 +66,7 @@ class CacheClient(
     inline fun requestResource(resource: String, request: (String) -> HttpUriRequest): CloseableHttpResponse {
         val toSend = request(url(resource))
         return makeRequest(toSend).apply {
-            println("Request ${toSend.requestLine}, response $statusLine")
+            logger.debug("Request ${toSend.requestLine}, response $statusLine")
         }
     }
 
@@ -75,11 +80,10 @@ class CacheClient(
             if (!it.isSuccess())
                 error("Error getting entry: ${it.statusLine}: $response")
 
-            println("Entry result: ${response}")
+            val result = json.decodeFromString<CacheEntry>(response ?: error("No response"))
 
-            val result = json.decodeFromString<CacheEntry?>(response ?: error("No response"))
-//            val downloadUrl = result?.archiveLocation ?: error("Cache not found")
-            //TODO set secret?
+            //TODO mark archive url as secret
+
             return result
         }
     }
@@ -87,22 +91,25 @@ class CacheClient(
     fun reserveCache(key: String, version: String): Int? =
         requestResource("caches") {
             HttpPost(it).apply {
-                entity = StringEntity(json.encodeToString(ReserveRequest(key,  version)), ContentType.APPLICATION_JSON)
+                entity = StringEntity(json.encodeToString(ReserveRequest(key, version)), ContentType.APPLICATION_JSON)
             }
         }.use {
+            if(it.statusLine.statusCode == 409)
+                return null
+
             val response = it.entity?.content?.readAllBytes()?.decodeToString()
-            if(!it.isSuccess())
+            if (!it.isSuccess())
                 error("Could not reserve cache key: ${it.statusLine}: $response")
 
-            json.decodeFromString<ReserveCacheResponse?>(response ?: error("No response"))?.cacheId
+            json.decodeFromString<ReserveCacheResponse>(response ?: error("No response")).cacheId
+            //TODO mark id as secret
         }
 
-    fun upload(id: Int, data: String) {
-        val bytes = data.encodeToByteArray()
+    fun upload(id: Int, data: ByteArrayInputStream, start: Long = 0, end: Long = data.available().toLong()) {
         requestResource("caches/$id") {
             HttpPatch(it).apply {
-                addHeader("Content-Range", "bytes 0-${bytes.size - 1}/*")
-                entity = ByteArrayEntity(bytes, ContentType.APPLICATION_OCTET_STREAM)
+                addHeader("Content-Range", "bytes $start-${end - 1}/*")
+                entity = InputStreamEntity(data, end - start, ContentType.APPLICATION_OCTET_STREAM)
             }
         }.use {
             val response = it.entity?.content?.readAllBytes()?.decodeToString()
@@ -120,8 +127,21 @@ class CacheClient(
             val response = it.entity?.content?.readAllBytes()?.decodeToString()
             if (!it.isSuccess())
                 error("Error committing cache: ${it.statusLine}: $response")
+        }
+    }
 
-            println("Commit result: $response")
+    fun download(archiveLocation: String): InputStream {
+        client.execute(HttpGet(archiveLocation).apply {
+            addHeader("User-Agent", userAgent)
+        }).use {
+            if (!it.isSuccess())
+                error(
+                    "Error committing cache: ${it.statusLine}: ${
+                        it.entity?.content?.readAllBytes()?.decodeToString()
+                    }"
+                )
+
+            return it.entity.content
         }
     }
 
@@ -140,12 +160,17 @@ fun main() {
     val version = key
     val data = "testCache"
 
-    //TODO I can only create once?  Or only reserve once
+    //TODO can't overwrite
 
-    val id = client.reserveCache(key, version) ?: error("Error reserving cache")
-    client.upload(id, data)
-    client.commit(id, data.encodeToByteArray().size.toLong())
+    val id = client.reserveCache(key, version)
+    if(id != null) {
+        client.upload(id, ByteArrayInputStream(data.encodeToByteArray()))
+        client.commit(id, data.encodeToByteArray().size.toLong())
+    }
 
-    println("Entry: ${client.getEntry(key, version)}")
+    val entry = client.getEntry(key, version) ?: error("No entry found")
+    println("Entry: $entry")
+    val value = client.download(entry.archiveLocation).readAllBytes().decodeToString()
+    println("Value: $value")
 
 }

@@ -11,7 +11,7 @@ class GHActionsBuildCacheService(): BuildCacheService{
     }
 
     override fun load(key: BuildCacheKey, reader: BuildCacheEntryReader): Boolean {
-        key.hashCode
+//        reader.readFrom()
         TODO("Not yet implemented")
     }
 
