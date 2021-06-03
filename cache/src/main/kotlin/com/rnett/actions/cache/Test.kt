@@ -65,12 +65,12 @@ class CacheClient(
 
     fun getEntry(key: String): CacheEntry? {
         requestResource("cache?keys=$key&version=$key", ::HttpGet).use {
+            val response = it.entity.content.readAllBytes().decodeToString()
+
             if (it.statusLine.statusCode == 204)
                 return null
             if (!it.isSuccess())
-                error("Error response: ${it.statusLine}")
-
-            val response = it.entity.content.readAllBytes().decodeToString()
+                error("Error getting entry: ${it.statusLine}: $response")
 
             println("Entry result: ${response}")
             val result = json.decodeFromString<CacheEntry?>(response)
@@ -86,10 +86,11 @@ class CacheClient(
                 entity = StringEntity(json.encodeToString(ReserveRequest(key)), ContentType.APPLICATION_JSON)
             }
         }.use {
+            val response = it.entity.content.readAllBytes().decodeToString()
             if(!it.isSuccess())
-                error("Could not reserve cache key")
+                error("Could not reserve cache key: ${it.statusLine}: $response")
 
-            json.decodeFromString<ReserveCacheResponse?>(it.entity.content.readAllBytes().decodeToString())?.cacheId
+            json.decodeFromString<ReserveCacheResponse?>(response)?.cacheId
         }
 
     fun upload(id: Int, data: String) {
@@ -100,8 +101,9 @@ class CacheClient(
                 entity = ByteArrayEntity(bytes, ContentType.APPLICATION_OCTET_STREAM)
             }
         }.use {
+            val response = it.entity.content.readAllBytes().decodeToString()
             if (!it.isSuccess())
-                error("Error during upload: ${it.statusLine}")
+                error("Error during upload: ${it.statusLine}: $response")
         }
     }
 
@@ -111,9 +113,10 @@ class CacheClient(
                 entity = StringEntity(json.encodeToString(CommitCacheRequest(size)), ContentType.APPLICATION_JSON)
             }
         }.use {
+            val response = it.entity.content.readAllBytes().decodeToString()
             if (!it.isSuccess())
-                error("Error committing cache: ${it.statusLine}")
-            println("Commit result: ${it.entity.content.readAllBytes().decodeToString()}")
+                error("Error committing cache: ${it.statusLine}: $response")
+            println("Commit result: $response")
         }
     }
 
