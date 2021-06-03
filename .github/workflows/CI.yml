@@ -22,7 +22,7 @@ jobs:
           chmod +x gradlew
 
       - name: Setup
-        uses: .
+        uses: ./action/..
 
       - name: Print env
         run: 'printenv'
