@@ -10,9 +10,10 @@ import java.nio.file.Path
 
 fun main() {
 
-    val baseUrlFile = Path.of("~/.cache-baseurl")
-    println("Base url file: ${baseUrlFile.toAbsolutePath()}")
-    val baseUrl = baseUrlFile.toFile().readText()
+    val homeDir = System.getProperty("user.home")
+    val baseUrlFile = File(homeDir, ".cache-baseurl")
+    println("Base url file: ${baseUrlFile.canonicalPath}")
+    val baseUrl = baseUrlFile.readText()
 
     HttpClients.createMinimal().use { client ->
 
@@ -22,7 +23,7 @@ fun main() {
 
         println("Env: ${System.getenv()}")
 
-        val url = "baseUrl$resource"
+        val url = "$baseUrl$resource"
 
         val result = client.execute(HttpGet(url)).use { response ->
             println("Status code: ${response.statusLine.statusCode}")
