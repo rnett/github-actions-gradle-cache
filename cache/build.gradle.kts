@@ -1,13 +1,13 @@
 plugins{
     kotlin("jvm")
-//    kotlin("plugin.serialization")
+    kotlin("plugin.serialization")
     `java-gradle-plugin`
     application
 }
 
 dependencies{
     implementation(project(":shared"))
-//    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 }
 
 kotlin{
