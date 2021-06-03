@@ -1,5 +1,6 @@
 package com.rnett.actions.cache
 
+import org.gradle.internal.impldep.org.apache.http.HttpHost
 import org.gradle.internal.impldep.org.apache.http.client.HttpClient
 import org.gradle.internal.impldep.org.apache.http.client.methods.HttpGet
 import org.gradle.internal.impldep.org.apache.http.client.methods.HttpUriRequest
@@ -9,9 +10,10 @@ import java.nio.file.Path
 
 
 fun main() {
-    val baseUrl = System.getenv(baseUrlEnviromentVariable)!!
+    val baseUrl = System.getenv(EnviromentVariables.baseUrl)!!
+    val token = System.getenv(EnviromentVariables.token)!!
 
-    HttpClients.createMinimal().use { client ->
+    HttpClients.createDefault().use { client ->
 
         val key = "testKey"
 
@@ -19,7 +21,12 @@ fun main() {
 
         val url = "$baseUrl$resource"
 
-        val result = client.execute(HttpGet(url)).use { response ->
+        val request = HttpGet(url).apply {
+            addHeader("User-Agent", "Gradle Actions Cache")
+            addHeader("Authorization", "Bearer $token")
+        }
+
+        val result = client.execute(request).use { response ->
             println("Status code: ${response.statusLine.statusCode}")
             response.entity.content.readAllBytes().decodeToString()
 

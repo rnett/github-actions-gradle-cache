@@ -13,5 +13,8 @@ fun main() = runOrFail{
 
     println("BaseURL: $baseUrl")
 //    maskSecret(baseUrl)
-    env.export[baseUrlEnviromentVariable] = baseUrl
+    env.export[EnviromentVariables.baseUrl] = baseUrl
+
+    val runtimeToken = env["ACTIONS_RUNTIME_TOKEN"] ?: error("Could not get cache access token")
+    env.export[EnviromentVariables.token] = runtimeToken
 }

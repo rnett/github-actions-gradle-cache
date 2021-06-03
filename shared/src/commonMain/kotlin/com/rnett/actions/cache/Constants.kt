@@ -1,3 +1,6 @@
 package com.rnett.actions.cache
 
-const val baseUrlEnviromentVariable = "GH_CACHE_BASE_URL"
+object EnviromentVariables{
+    const val baseUrl = "GH_CACHE_BASE_URL"
+    const val token = "GH_CACHE_TOKEN"
+}
