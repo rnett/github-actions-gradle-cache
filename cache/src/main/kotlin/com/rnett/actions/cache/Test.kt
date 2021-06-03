@@ -73,6 +73,7 @@ class CacheClient(
                 error("Error getting entry: ${it.statusLine}: $response")
 
             println("Entry result: ${response}")
+
             val result = json.decodeFromString<CacheEntry?>(response)
 //            val downloadUrl = result?.archiveLocation ?: error("Cache not found")
             //TODO set secret?
@@ -116,6 +117,7 @@ class CacheClient(
             val response = it.entity.content.readAllBytes().decodeToString()
             if (!it.isSuccess())
                 error("Error committing cache: ${it.statusLine}: $response")
+
             println("Commit result: $response")
         }
     }
@@ -134,9 +136,9 @@ fun main() {
     val key = "testKey"
     val data = "testCache"
 
-    val id = client.reserveCache(key) ?: error("Error reserving cache")
-    client.upload(id, data)
-    client.commit(id, data.length.toLong())
+//    val id = client.reserveCache(key) ?: error("Error reserving cache")
+//    client.upload(id, data)
+//    client.commit(id, data.length.toLong())
 
     println("Entry: ${client.getEntry(key)}")
 
