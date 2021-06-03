@@ -68,7 +68,7 @@ class CacheClient(
     inline fun requestResource(resource: String, request: (String) -> HttpUriRequest): CloseableHttpResponse {
         val toSend = request(url(resource))
         return makeRequest(toSend).apply {
-            logger.debug("Request ${toSend.requestLine}, response $statusLine")
+            println("Request ${toSend.requestLine}, response $statusLine")
         }
     }
 
@@ -155,19 +155,21 @@ class CacheClient(
     }
 }
 
+//TODO implement the cache
 fun main() {
     val baseUrl = System.getenv(EnviromentVariables.baseUrl)!!
     val token = System.getenv(EnviromentVariables.token)!!
 
     val client = CacheClient(baseUrl, token)
 
-    val key = "testKey2"
+    val key = "testKey3"
     val version = key
     val data = "testCache"
 
     //TODO can't overwrite
 
     val id = client.reserveCache(key, version)
+    client.reserveCache(key, version)
     if(id != null) {
         println("Saving cache")
         client.upload(id, ByteArrayInputStream(data.encodeToByteArray()))
