@@ -33,7 +33,7 @@ jobs:
             ${{ runner.os }}-publish-gradle-
 
       - name: Build
-        run: './gradlew build'
+        run: './gradlew assemble'
 
       - name: Setup
         uses: ./action/..
