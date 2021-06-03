@@ -40,7 +40,9 @@ private fun getInitScript(version: String, baseUrl: String, token: String, isPus
     """.trimIndent()
 
 private fun addInitScript(version: String, baseUrl: String, token: String, isPush: Boolean) {
-    Path("~/.gradle/init.d/gh_actions_cache.init.gradle.kts").write(getInitScript(version, baseUrl, token, isPush))
+    Path("~/.gradle/init.d/gh_actions_cache.init.gradle.kts")
+        .also { it.parent.mkdir() }
+        .write(getInitScript(version, baseUrl, token, isPush))
 }
 
 private fun enableBuildCache() {
