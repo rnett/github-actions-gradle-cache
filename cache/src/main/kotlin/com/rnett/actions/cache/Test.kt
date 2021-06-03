@@ -70,7 +70,10 @@ class CacheClient(
             if (!it.isSuccess())
                 error("Error response: ${it.statusLine}")
 
-            val result = json.decodeFromString<CacheEntry?>(it.entity.content.readAllBytes().decodeToString())
+            val response = it.entity.content.readAllBytes().decodeToString()
+
+            println("Entry result: ${response}")
+            val result = json.decodeFromString<CacheEntry?>(response)
 //            val downloadUrl = result?.archiveLocation ?: error("Cache not found")
             //TODO set secret?
             return result
@@ -109,7 +112,8 @@ class CacheClient(
             }
         }.use {
             if (!it.isSuccess())
-                error("Error commiting cache: ${it.statusLine}")
+                error("Error committing cache: ${it.statusLine}")
+            println("Commit result: ${it.entity.content.readAllBytes().decodeToString()}")
         }
     }
 
