@@ -27,7 +27,7 @@ data class CacheEntry(
 )
 
 @Serializable
-data class ReserveRequest(val key: String, val version: String = key)
+data class ReserveRequest(val key: String, val version: String)
 
 @Serializable
 data class ReserveCacheResponse(val cacheId: Int)
@@ -64,36 +64,36 @@ class CacheClient(
         }
     }
 
-    fun getEntry(key: String): CacheEntry? {
-        requestResource("cache?keys=$key&version=$key", ::HttpGet).use {
+    fun getEntry(key: String, version: String): CacheEntry? {
+        requestResource("cache?keys=$key&version=$version", ::HttpGet).use {
             if (it.statusLine.statusCode == 204)
                 return null
 
-            val response = it.entity.content.readAllBytes().decodeToString()
+            val response = it.entity?.content?.readAllBytes()?.decodeToString()
 
             if (!it.isSuccess())
                 error("Error getting entry: ${it.statusLine}: $response")
 
             println("Entry result: ${response}")
 
-            val result = json.decodeFromString<CacheEntry?>(response)
+            val result = json.decodeFromString<CacheEntry?>(response ?: error("No response"))
 //            val downloadUrl = result?.archiveLocation ?: error("Cache not found")
             //TODO set secret?
             return result
         }
     }
 
-    fun reserveCache(key: String): Int? =
+    fun reserveCache(key: String, version: String): Int? =
         requestResource("caches") {
             HttpPost(it).apply {
-                entity = StringEntity(json.encodeToString(ReserveRequest(key)), ContentType.APPLICATION_JSON)
+                entity = StringEntity(json.encodeToString(ReserveRequest(key,  version)), ContentType.APPLICATION_JSON)
             }
         }.use {
-            val response = it.entity.content.readAllBytes().decodeToString()
+            val response = it.entity?.content?.readAllBytes()?.decodeToString()
             if(!it.isSuccess())
                 error("Could not reserve cache key: ${it.statusLine}: $response")
 
-            json.decodeFromString<ReserveCacheResponse?>(response)?.cacheId
+            json.decodeFromString<ReserveCacheResponse?>(response ?: error("No response"))?.cacheId
         }
 
     fun upload(id: Int, data: String) {
@@ -104,7 +104,7 @@ class CacheClient(
                 entity = ByteArrayEntity(bytes, ContentType.APPLICATION_OCTET_STREAM)
             }
         }.use {
-            val response = it.entity.content.readAllBytes().decodeToString()
+            val response = it.entity?.content?.readAllBytes()?.decodeToString()
             if (!it.isSuccess())
                 error("Error during upload: ${it.statusLine}: $response")
         }
@@ -116,7 +116,7 @@ class CacheClient(
                 entity = StringEntity(json.encodeToString(CommitCacheRequest(size)), ContentType.APPLICATION_JSON)
             }
         }.use {
-            val response = it.entity.content.readAllBytes().decodeToString()
+            val response = it.entity?.content?.readAllBytes()?.decodeToString()
             if (!it.isSuccess())
                 error("Error committing cache: ${it.statusLine}: $response")
 
@@ -136,14 +136,15 @@ fun main() {
     val client = CacheClient(baseUrl, token)
 
     val key = "testKey2"
+    val version = "ver1"
     val data = "testCache"
 
     //TODO I can only create once?  Or only reserve once
 
-    val id = client.reserveCache(key) ?: error("Error reserving cache")
+    val id = client.reserveCache(key, version) ?: error("Error reserving cache")
     client.upload(id, data)
     client.commit(id, data.encodeToByteArray().size.toLong())
 
-    println("Entry: ${client.getEntry(key)}")
+    println("Entry: ${client.getEntry(key, version)}")
 
 }
