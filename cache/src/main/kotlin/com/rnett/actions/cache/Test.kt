@@ -10,10 +10,7 @@ import org.gradle.internal.impldep.com.fasterxml.jackson.annotation.JsonProperty
 import org.gradle.internal.impldep.com.fasterxml.jackson.annotation.PropertyAccessor
 import org.gradle.internal.impldep.com.fasterxml.jackson.databind.ObjectMapper
 import org.gradle.internal.impldep.org.apache.http.HttpResponse
-import org.gradle.internal.impldep.org.apache.http.client.methods.HttpGet
-import org.gradle.internal.impldep.org.apache.http.client.methods.HttpPatch
-import org.gradle.internal.impldep.org.apache.http.client.methods.HttpPost
-import org.gradle.internal.impldep.org.apache.http.client.methods.HttpUriRequest
+import org.gradle.internal.impldep.org.apache.http.client.methods.*
 import org.gradle.internal.impldep.org.apache.http.entity.ByteArrayEntity
 import org.gradle.internal.impldep.org.apache.http.entity.ContentType
 import org.gradle.internal.impldep.org.apache.http.entity.StringEntity
@@ -60,11 +57,18 @@ class CacheClient(
 
     fun makeRequest(request: HttpUriRequest) = client.execute(request.setup())
 
-    inline fun requestResource(resource: String, request: (String) -> HttpUriRequest) =
-        makeRequest(request(url(resource)))
+    inline fun requestResource(resource: String, request: (String) -> HttpUriRequest): CloseableHttpResponse {
+        val toSend = request(url(resource))
+        return makeRequest(toSend).apply {
+            println("Request ${toSend.requestLine}, response $statusLine")
+        }
+    }
 
     fun getEntry(key: String): CacheEntry? {
         requestResource("cache?keys=$key&version=$key", ::HttpGet).use {
+            if(it.entity == null)
+                return null
+
             val response = it.entity.content.readAllBytes().decodeToString()
 
             if (it.statusLine.statusCode == 204)
@@ -135,6 +139,8 @@ fun main() {
 
     val key = "testKey"
     val data = "testCache"
+
+    //TODO I can only create once?  Or only reserve once
 
 //    val id = client.reserveCache(key) ?: error("Error reserving cache")
 //    client.upload(id, data)
