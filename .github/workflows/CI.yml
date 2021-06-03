@@ -21,10 +21,13 @@ jobs:
         run: |
           chmod +x gradlew
 
+      - name: Build
+        run: './gradlew build'
+
       - name: Setup
         uses: ./action/..
 
       - name: Print env
         run: 'printenv'
       - name: Run
-        run: './gradlew run'
+        run: './gradlew :cache:run'
