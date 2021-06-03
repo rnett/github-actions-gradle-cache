@@ -66,13 +66,11 @@ class CacheClient(
 
     fun getEntry(key: String): CacheEntry? {
         requestResource("cache?keys=$key&version=$key", ::HttpGet).use {
-            if(it.entity == null)
+            if (it.statusLine.statusCode == 204)
                 return null
 
             val response = it.entity.content.readAllBytes().decodeToString()
 
-            if (it.statusLine.statusCode == 204)
-                return null
             if (!it.isSuccess())
                 error("Error getting entry: ${it.statusLine}: $response")
 
@@ -137,14 +135,14 @@ fun main() {
 
     val client = CacheClient(baseUrl, token)
 
-    val key = "testKey"
+    val key = "testKey2"
     val data = "testCache"
 
     //TODO I can only create once?  Or only reserve once
 
-//    val id = client.reserveCache(key) ?: error("Error reserving cache")
-//    client.upload(id, data)
-//    client.commit(id, data.length.toLong())
+    val id = client.reserveCache(key) ?: error("Error reserving cache")
+    client.upload(id, data)
+    client.commit(id, data.encodeToByteArray().size.toLong())
 
     println("Entry: ${client.getEntry(key)}")
 
