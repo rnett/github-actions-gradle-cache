@@ -15,6 +15,8 @@ import org.gradle.internal.impldep.org.apache.http.message.BasicNameValuePair
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.InputStream
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 
 @Serializable
 data class CacheEntry(
@@ -130,7 +132,10 @@ class CacheClient(
         }
     }
 
-    fun download(archiveLocation: String): InputStream {
+    inline fun <R> download(archiveLocation: String, use: (InputStream) -> R): R {
+        contract {
+            callsInPlace(use, InvocationKind.EXACTLY_ONCE)
+        }
         client.execute(HttpGet(archiveLocation).apply {
             addHeader("User-Agent", userAgent)
         }).use {
@@ -141,7 +146,7 @@ class CacheClient(
                     }"
                 )
 
-            return it.entity.content
+            return use(it.entity.content)
         }
     }
 
@@ -164,13 +169,16 @@ fun main() {
 
     val id = client.reserveCache(key, version)
     if(id != null) {
+        println("Saving cache")
         client.upload(id, ByteArrayInputStream(data.encodeToByteArray()))
         client.commit(id, data.encodeToByteArray().size.toLong())
+    } else {
+        println("Using pre-saved cache")
     }
 
     val entry = client.getEntry(key, version) ?: error("No entry found")
     println("Entry: $entry")
-    val value = client.download(entry.archiveLocation).readAllBytes().decodeToString()
+    val value = client.download(entry.archiveLocation){ it.readAllBytes().decodeToString() }
     println("Value: $value")
 
 }

@@ -17,6 +17,11 @@ kotlin{
             attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
         }
     }
+    sourceSets.all {
+        languageSettings {
+            useExperimentalAnnotation("kotlin.contracts.ExperimentalContracts")
+        }
+    }
 }
 
 
