@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <bytecodeTargetLevel target="14" />
+    <bytecodeTargetLevel target="14">
+      <module name="github-actions-gradle-cache.commonMain" target="1.8" />
+      <module name="github-actions-gradle-cache.commonTest" target="1.8" />
+      <module name="github-actions-gradle-cache.jvmMain" target="1.8" />
+      <module name="github-actions-gradle-cache.jvmTest" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
 </project>

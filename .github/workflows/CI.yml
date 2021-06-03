@@ -21,6 +21,9 @@ jobs:
         run: |
           chmod +x gradlew
 
+      - name: Setup
+        uses: .
+
       - name: Print env
         run: 'printenv'
       - name: Run

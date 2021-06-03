@@ -1,0 +1,11 @@
+
+name: 'Gradle GitHub Actions Cache'
+description: 'Installs a gradle build cache that uses GitHub Actions caching'
+inputs:
+  use-build-cache:
+    description: "Whether to set org.gradle.caching=true"
+    default: 'false'
+    required: false
+runs:
+  using: 'node12'
+  main: 'action/dist/index.js'
