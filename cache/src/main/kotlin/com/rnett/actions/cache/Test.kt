@@ -9,19 +9,13 @@ import java.nio.file.Path
 
 
 fun main() {
-
-    val homeDir = System.getProperty("user.home")
-    val baseUrlFile = File(homeDir, ".cache-baseurl")
-    println("Base url file: ${baseUrlFile.canonicalPath}")
-    val baseUrl = baseUrlFile.readText()
+    val baseUrl = System.getenv(baseUrlEnviromentVariable)!!
 
     HttpClients.createMinimal().use { client ->
 
         val key = "testKey"
 
         val resource = "cache?keys=$key&version=$key"
-
-        println("Env: ${System.getenv()}")
 
         val url = "$baseUrl$resource"
 

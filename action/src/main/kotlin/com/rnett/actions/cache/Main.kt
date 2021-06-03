@@ -2,6 +2,7 @@ package com.rnett.actions.cache
 
 import com.rnett.action.Path
 import com.rnett.action.core.env
+import com.rnett.action.core.maskSecret
 import com.rnett.action.core.runOrFail
 
 fun main() = runOrFail{
@@ -11,5 +12,6 @@ fun main() = runOrFail{
         .replace("pipelines", "artifactcache") + "_apis/artifactcache/"
 
     println("BaseURL: $baseUrl")
-    Path("~/.cache-baseurl").write(baseUrl)
+//    maskSecret(baseUrl)
+    env.export[baseUrlEnviromentVariable] = baseUrl
 }
