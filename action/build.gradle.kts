@@ -7,7 +7,7 @@ plugins{
 
 dependencies{
     implementation(project(":shared"))
-    implementation("com.github.rnett.ktjs-github-action:kotlin-js-action:1.2.0-SNAPSHOT")
+    implementation("com.github.rnett.ktjs-github-action:kotlin-js-action:1.2.1-SNAPSHOT")
 }
 
 kotlin {

@@ -4,7 +4,7 @@ plugins {
     kotlin("jvm") version "1.5.10" apply false
     kotlin("js") version "1.5.10" apply false
     kotlin("multiplatform") version "1.5.10" apply false
-    id("com.github.rnett.ktjs-github-action") version "1.2.0-SNAPSHOT" apply false
+    id("com.github.rnett.ktjs-github-action") version "1.2.1-SNAPSHOT" apply false
 }
 
 allprojects {
