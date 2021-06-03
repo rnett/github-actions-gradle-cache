@@ -4,8 +4,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.gradle.caching.BuildCacheEntryWriter
-import org.gradle.caching.BuildCacheException
 import org.apache.http.HttpResponse
 import org.apache.http.client.methods.*
 import org.apache.http.entity.AbstractHttpEntity
@@ -15,6 +13,8 @@ import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.message.BasicNameValuePair
+import org.gradle.caching.BuildCacheEntryWriter
+import org.gradle.caching.BuildCacheException
 import org.slf4j.LoggerFactory
 import java.io.*
 import kotlin.contracts.InvocationKind
@@ -22,7 +22,7 @@ import kotlin.contracts.contract
 
 
 @Serializable
-data class CacheEntry(
+internal data class CacheEntry(
     val cacheKey: String,
     val scope: String,
     val creationTime: String,
@@ -31,35 +31,35 @@ data class CacheEntry(
 )
 
 @Serializable
-data class ReserveRequest(val key: String, val version: String)
+internal data class ReserveRequest(val key: String, val version: String)
 
 @Serializable
-data class ReserveCacheResponse(val cacheId: Int)
+internal data class ReserveCacheResponse(val cacheId: Int)
 
 @Serializable
-data class CommitCacheRequest(val size: Long)
+internal data class CommitCacheRequest(val size: Long)
 
-fun HttpResponse.isSuccess() = statusLine.statusCode in 200 until 300
+internal fun HttpResponse.isSuccess() = statusLine.statusCode in 200 until 300
 
-inline fun <R> repeatUntilNonNull(maxReps: Int, block: () -> R?): R? {
-    require(maxReps > 0){ "maxReps must be > 0" }
+internal inline fun <R> repeatUntilNonNull(maxReps: Int, block: () -> R?): R? {
+    require(maxReps > 0) { "maxReps must be > 0" }
     var i = 0
-    while(i < maxReps){
+    while (i < maxReps) {
         block()?.let { return it }
         i++
     }
     return null
 }
 
-inline fun repeatUntilNoException(maxReps: Int, block: () -> Unit) {
-    require(maxReps > 0){ "maxReps must be > 0" }
+internal inline fun repeatUntilNoException(maxReps: Int, block: () -> Unit) {
+    require(maxReps > 0) { "maxReps must be > 0" }
     var i = 0
     var lastException: Throwable? = null
-    while(i < maxReps){
+    while (i < maxReps) {
         try {
             block()
             return
-        } catch (e: Throwable){
+        } catch (e: Throwable) {
             lastException = e
         }
         i++
@@ -67,7 +67,7 @@ inline fun repeatUntilNoException(maxReps: Int, block: () -> Unit) {
     throw lastException!!
 }
 
-class CacheClient(
+internal class CacheClient(
     val baseUrl: String,
     val token: String,
     val json: Json = Json { ignoreUnknownKeys = true }
@@ -125,7 +125,7 @@ class CacheClient(
                 entity = StringEntity(json.encodeToString(ReserveRequest(key, version)), ContentType.APPLICATION_JSON)
             }
         }.use {
-            if(it.statusLine.statusCode == 409)
+            if (it.statusLine.statusCode == 409)
                 return null
 
             val response = it.entity?.content?.readAllBytes()?.decodeToString()
@@ -149,10 +149,11 @@ class CacheClient(
         }
     }
 
-    class CacheWriterHttpEntity(val writer: BuildCacheEntryWriter): AbstractHttpEntity() {
+    class CacheWriterHttpEntity(val writer: BuildCacheEntryWriter) : AbstractHttpEntity() {
         init {
             setContentType(ContentType.APPLICATION_OCTET_STREAM.toString())
         }
+
         override fun isRepeatable(): Boolean = false
 
         override fun getContentLength(): Long = writer.size

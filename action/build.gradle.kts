@@ -1,6 +1,6 @@
 import com.rnett.action.githubAction
 
-plugins{
+plugins {
     kotlin("js")
     id("com.github.rnett.ktjs-github-action")
     id("com.github.gmazzo.buildconfig")
@@ -9,12 +9,12 @@ plugins{
 ext["pomName"] = "GH Action gradle cache setup action"
 description = "GitHub action to set up GitHub Actions gradle build cache"
 
-dependencies{
+dependencies {
     implementation(project(":shared"))
     implementation("com.github.rnett.ktjs-github-action:kotlin-js-action:1.2.1-SNAPSHOT")
 }
 
-buildConfig{
+buildConfig {
     packageName("com.rnett.actions.cache")
     buildConfigField("String", "VERSION", "\"${version.toString()}\"")
 }

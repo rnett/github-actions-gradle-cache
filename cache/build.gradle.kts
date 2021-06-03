@@ -1,4 +1,4 @@
-plugins{
+plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
     `java-gradle-plugin`
@@ -8,14 +8,14 @@ plugins{
 ext["pomName"] = "GH Action gradle cache"
 description = "A gradle build cache service that uses GitHub Action's cache"
 
-dependencies{
+dependencies {
     implementation(project(":shared"))
     implementation("org.apache.httpcomponents:httpclient:4.5.13")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 }
 
-kotlin{
-    target{
+kotlin {
+    target {
         compilations.all { kotlinOptions.jvmTarget = "1.8" }
         attributes {
             attribute(TargetJvmVersion.TARGET_JVM_VERSION_ATTRIBUTE, 8)
@@ -40,7 +40,7 @@ gradlePlugin {
 }
 
 
-application{
+application {
     mainClass.set("com.rnett.actions.cache.TestKt")
 }
 

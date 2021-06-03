@@ -1,4 +1,3 @@
-
 name: 'Gradle GitHub Actions Cache'
 description: 'Installs a gradle build cache that uses GitHub Actions caching'
 inputs:

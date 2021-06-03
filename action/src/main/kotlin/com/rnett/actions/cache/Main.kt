@@ -6,7 +6,7 @@ import com.rnett.action.core.inputs
 import com.rnett.action.core.maskSecret
 import com.rnett.action.core.runOrFail
 
-fun getInitScript(version: String, baseUrl: String, token: String, isPush: Boolean) =
+private fun getInitScript(version: String, baseUrl: String, token: String, isPush: Boolean) =
     """
         initscript{
             repositories{
@@ -39,11 +39,11 @@ fun getInitScript(version: String, baseUrl: String, token: String, isPush: Boole
         }
     """.trimIndent()
 
-fun addInitScript(version: String, baseUrl: String, token: String, isPush: Boolean) {
+private fun addInitScript(version: String, baseUrl: String, token: String, isPush: Boolean) {
     Path("~/.gradle/init.d/gh_actions_cache.init.gradle.kts").write(getInitScript(version, baseUrl, token, isPush))
 }
 
-fun enableBuildCache() {
+private fun enableBuildCache() {
     Path("~/.gradle/gradle.properties")
         .also { it.parent.mkdir() }
         .append("org.gradle.caching=true")
@@ -59,9 +59,9 @@ fun main() = runOrFail {
     val runtimeToken = env["ACTIONS_RUNTIME_TOKEN"] ?: error("Could not get cache access token")
     maskSecret(runtimeToken)
 
-    val version = inputs.getOrElse("version"){ "" }.ifBlank { BuildConfig.VERSION }
-    val isPush = inputs.getOrElse("is-push"){ "" }.ifBlank { "true" }
-    val enable = inputs.getOrElse("enable"){ "" }.ifBlank { "true" }
+    val version = inputs.getOrElse("version") { "" }.ifBlank { BuildConfig.VERSION }
+    val isPush = inputs.getOrElse("is-push") { "" }.ifBlank { "true" }
+    val enable = inputs.getOrElse("enable") { "" }.ifBlank { "true" }
     addInitScript(version, baseUrl, runtimeToken, isPush.toBoolean())
     if (enable.toBoolean())
         enableBuildCache()
