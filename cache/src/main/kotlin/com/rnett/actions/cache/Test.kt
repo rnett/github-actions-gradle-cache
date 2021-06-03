@@ -4,8 +4,11 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.gradle.caching.BuildCacheEntryWriter
+import org.gradle.caching.BuildCacheException
 import org.gradle.internal.impldep.org.apache.http.HttpResponse
 import org.gradle.internal.impldep.org.apache.http.client.methods.*
+import org.gradle.internal.impldep.org.apache.http.entity.AbstractHttpEntity
 import org.gradle.internal.impldep.org.apache.http.entity.ContentType
 import org.gradle.internal.impldep.org.apache.http.entity.InputStreamEntity
 import org.gradle.internal.impldep.org.apache.http.entity.StringEntity
@@ -13,10 +16,10 @@ import org.gradle.internal.impldep.org.apache.http.impl.client.CloseableHttpClie
 import org.gradle.internal.impldep.org.apache.http.impl.client.HttpClients
 import org.gradle.internal.impldep.org.apache.http.message.BasicNameValuePair
 import org.slf4j.LoggerFactory
-import java.io.ByteArrayInputStream
-import java.io.InputStream
+import java.io.*
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
+
 
 @Serializable
 data class CacheEntry(
@@ -37,6 +40,32 @@ data class ReserveCacheResponse(val cacheId: Int)
 data class CommitCacheRequest(val size: Long)
 
 fun HttpResponse.isSuccess() = statusLine.statusCode in 200 until 300
+
+inline fun <R> repeatUntilNonNull(maxReps: Int, block: () -> R?): R? {
+    require(maxReps > 0){ "maxReps must be > 0" }
+    var i = 0
+    while(i < maxReps){
+        block()?.let { return it }
+        i++
+    }
+    return null
+}
+
+inline fun repeatUntilNoException(maxReps: Int, block: () -> Unit) {
+    require(maxReps > 0){ "maxReps must be > 0" }
+    var i = 0
+    var lastException: Throwable? = null
+    while(i < maxReps){
+        try {
+            block()
+            return
+        } catch (e: Throwable){
+            lastException = e
+        }
+        i++
+    }
+    throw lastException!!
+}
 
 class CacheClient(
     val baseUrl: String,
@@ -80,7 +109,7 @@ class CacheClient(
             val response = it.entity?.content?.readAllBytes()?.decodeToString()
 
             if (!it.isSuccess())
-                error("Error getting entry: ${it.statusLine}: $response")
+                throw BuildCacheException("Error getting cache entry: ${it.statusLine}: $response")
 
             val result = json.decodeFromString<CacheEntry>(response ?: error("No response"))
 
@@ -101,9 +130,9 @@ class CacheClient(
 
             val response = it.entity?.content?.readAllBytes()?.decodeToString()
             if (!it.isSuccess())
-                error("Could not reserve cache key: ${it.statusLine}: $response")
+                throw BuildCacheException("Could not reserve cache key: ${it.statusLine}: $response")
 
-            json.decodeFromString<ReserveCacheResponse>(response ?: error("No response")).cacheId
+            json.decodeFromString<ReserveCacheResponse>(response ?: error("No response")).cacheId.takeIf { it != -1 }
             //TODO mark id as secret
         }
 
@@ -116,7 +145,51 @@ class CacheClient(
         }.use {
             val response = it.entity?.content?.readAllBytes()?.decodeToString()
             if (!it.isSuccess())
-                error("Error during upload: ${it.statusLine}: $response")
+                throw BuildCacheException("Error during upload: ${it.statusLine}: $response")
+        }
+    }
+
+    class CacheWriterHttpEntity(val writer: BuildCacheEntryWriter): AbstractHttpEntity() {
+        init {
+            setContentType(ContentType.APPLICATION_OCTET_STREAM.toString())
+        }
+        override fun isRepeatable(): Boolean = false
+
+        override fun getContentLength(): Long = writer.size
+
+        override fun getContent(): InputStream {
+            val input = PipedInputStream()
+            val out = PipedOutputStream(input)
+            Thread {
+                try {
+                    writer.writeTo(out)
+                } finally {
+                    if (out != null) {
+                        out.close()
+                    }
+                }
+            }.start()
+            return input
+        }
+
+        override fun writeTo(p0: OutputStream) {
+            writer.writeTo(p0)
+        }
+
+        override fun isStreaming(): Boolean = true
+
+    }
+
+    fun upload(id: Int, data: BuildCacheEntryWriter) {
+        requestResource("caches/$id") {
+            HttpPatch(it).apply {
+                addHeader("Content-Range", "bytes 0-${data.size - 1}/*")
+                entity = CacheWriterHttpEntity(data)
+            }
+        }.use {
+            val response = it.entity?.content?.readAllBytes()?.decodeToString()
+            if (!it.isSuccess())
+                throw BuildCacheException("Error during upload: ${it.statusLine}: $response")
         }
     }
 
@@ -128,7 +201,7 @@ class CacheClient(
         }.use {
             val response = it.entity?.content?.readAllBytes()?.decodeToString()
             if (!it.isSuccess())
-                error("Error committing cache: ${it.statusLine}: $response")
+                throw BuildCacheException("Error committing cache: ${it.statusLine}: $response")
         }
     }
 
@@ -140,8 +213,8 @@ class CacheClient(
             addHeader("User-Agent", userAgent)
         }).use {
             if (!it.isSuccess())
-                error(
-                    "Error committing cache: ${it.statusLine}: ${
+                throw BuildCacheException(
+                    "Error downloading cache: ${it.statusLine}: ${
                         it.entity?.content?.readAllBytes()?.decodeToString()
                     }"
                 )
@@ -169,7 +242,6 @@ fun main() {
     //TODO can't overwrite
 
     val id = client.reserveCache(key, version)
-    client.reserveCache(key, version)
     if(id != null) {
         println("Saving cache")
         client.upload(id, ByteArrayInputStream(data.encodeToByteArray()))
