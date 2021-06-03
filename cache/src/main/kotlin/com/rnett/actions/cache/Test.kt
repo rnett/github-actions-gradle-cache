@@ -5,13 +5,14 @@ import org.gradle.internal.impldep.org.apache.http.client.methods.HttpGet
 import org.gradle.internal.impldep.org.apache.http.client.methods.HttpUriRequest
 import org.gradle.internal.impldep.org.apache.http.impl.client.HttpClients
 import java.io.File
+import java.nio.file.Path
 
 
 fun main() {
 
-    val baseUrlFile = File("~/.cache-baseurl")
-    println("Base url file: ${baseUrlFile.absolutePath}")
-    val baseUrl = baseUrlFile.readText()
+    val baseUrlFile = Path.of("~/.cache-baseurl")
+    println("Base url file: ${baseUrlFile.toAbsolutePath()}")
+    val baseUrl = baseUrlFile.toFile().readText()
 
     HttpClients.createMinimal().use { client ->
 
