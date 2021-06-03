@@ -6,15 +6,15 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.gradle.caching.BuildCacheEntryWriter
 import org.gradle.caching.BuildCacheException
-import org.gradle.internal.impldep.org.apache.http.HttpResponse
-import org.gradle.internal.impldep.org.apache.http.client.methods.*
-import org.gradle.internal.impldep.org.apache.http.entity.AbstractHttpEntity
-import org.gradle.internal.impldep.org.apache.http.entity.ContentType
-import org.gradle.internal.impldep.org.apache.http.entity.InputStreamEntity
-import org.gradle.internal.impldep.org.apache.http.entity.StringEntity
-import org.gradle.internal.impldep.org.apache.http.impl.client.CloseableHttpClient
-import org.gradle.internal.impldep.org.apache.http.impl.client.HttpClients
-import org.gradle.internal.impldep.org.apache.http.message.BasicNameValuePair
+import org.apache.http.HttpResponse
+import org.apache.http.client.methods.*
+import org.apache.http.entity.AbstractHttpEntity
+import org.apache.http.entity.ContentType
+import org.apache.http.entity.InputStreamEntity
+import org.apache.http.entity.StringEntity
+import org.apache.http.impl.client.CloseableHttpClient
+import org.apache.http.impl.client.HttpClients
+import org.apache.http.message.BasicNameValuePair
 import org.slf4j.LoggerFactory
 import java.io.*
 import kotlin.contracts.InvocationKind
@@ -97,7 +97,7 @@ class CacheClient(
     inline fun requestResource(resource: String, request: (String) -> HttpUriRequest): CloseableHttpResponse {
         val toSend = request(url(resource))
         return makeRequest(toSend).apply {
-            println("Request ${toSend.requestLine}, response $statusLine")
+            logger.debug("Request ${toSend.requestLine}, response $statusLine")
         }
     }
 
@@ -226,33 +226,4 @@ class CacheClient(
     override fun close() {
         client.close()
     }
-}
-
-//TODO implement the cache
-fun main() {
-    val baseUrl = System.getenv(EnviromentVariables.baseUrl)!!
-    val token = System.getenv(EnviromentVariables.token)!!
-
-    val client = CacheClient(baseUrl, token)
-
-    val key = "testKey3"
-    val version = key
-    val data = "testCache"
-
-    //TODO can't overwrite
-
-    val id = client.reserveCache(key, version)
-    if(id != null) {
-        println("Saving cache")
-        client.upload(id, ByteArrayInputStream(data.encodeToByteArray()))
-        client.commit(id, data.encodeToByteArray().size.toLong())
-    } else {
-        println("Using pre-saved cache")
-    }
-
-    val entry = client.getEntry(key, version) ?: error("No entry found")
-    println("Entry: $entry")
-    val value = client.download(entry.archiveLocation){ it.readAllBytes().decodeToString() }
-    println("Value: $value")
-
 }

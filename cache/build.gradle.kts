@@ -5,8 +5,12 @@ plugins{
     application
 }
 
+ext["pomName"] = "GH Action gradle cache"
+description = "A gradle build cache service that uses GitHub Action's cache"
+
 dependencies{
     implementation(project(":shared"))
+    implementation("org.apache.httpcomponents:httpclient:4.5.13")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 }
 
@@ -20,6 +24,17 @@ kotlin{
     sourceSets.all {
         languageSettings {
             useExperimentalAnnotation("kotlin.contracts.ExperimentalContracts")
+        }
+    }
+}
+
+gradlePlugin {
+    plugins {
+        create("ghActionsCachePlugin") {
+            id = "com.github.rnett.github-actions-build-cache"
+            displayName = "GitHub Actions build cache plugin"
+            description = "GitHub Actions build cache plugin"
+            implementationClass = "com.rnett.actions.cache.GHActionsBuildCachePlugin"
         }
     }
 }

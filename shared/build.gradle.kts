@@ -2,6 +2,9 @@ plugins{
     kotlin("multiplatform")
 }
 
+ext["pomName"] = "GH Action gradle cache shared constants"
+description = "Shared constants between the cache setup action and the cache itself"
+
 kotlin{
     jvm{
         compilations.all { kotlinOptions.jvmTarget = "1.8" }
@@ -10,6 +13,6 @@ kotlin{
         }
     }
     js(IR){
-        nodejs()
+        browser()
     }
 }

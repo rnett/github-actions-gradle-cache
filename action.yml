@@ -2,9 +2,16 @@
 name: 'Gradle GitHub Actions Cache'
 description: 'Installs a gradle build cache that uses GitHub Actions caching'
 inputs:
-  use-build-cache:
+  version:
+    description: "The version of com.github.rnett.github-actions-build-cache to use.  By default the same as this."
+    required: false
+  is-push:
+    description: "Whether to push to the GitHub Action cache"
+    default: 'true'
+    required: false
+  enable:
     description: "Whether to set org.gradle.caching=true"
-    default: 'false'
+    default: 'true'
     required: false
 runs:
   using: 'node12'

@@ -33,16 +33,7 @@ jobs:
             ${{ runner.os }}-publish-gradle-
 
       - name: Build
-        run: './gradlew assemble'
-
-      - name: Setup
-        uses: ./action/..
-
-      - name: Print env
-        run: 'ls -al ~'
-
-      - name: Run
-        run: './gradlew :cache:run'
+        run: './gradlew build'
 
       - name: Stop gradle daemon
         run: ./gradlew --stop
