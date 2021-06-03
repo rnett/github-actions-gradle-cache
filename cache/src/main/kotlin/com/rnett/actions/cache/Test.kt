@@ -23,7 +23,8 @@ data class CacheEntry(
     val cacheKey: String?,
     val scope: String?,
     val creationTime: String?,
-    val archiveLocation: String?
+    val archiveLocation: String?,
+    val cacheVersion: String
 )
 
 @Serializable
@@ -136,7 +137,7 @@ fun main() {
     val client = CacheClient(baseUrl, token)
 
     val key = "testKey2"
-    val version = "ver1"
+    val version = key
     val data = "testCache"
 
     //TODO I can only create once?  Or only reserve once
