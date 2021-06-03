@@ -9,24 +9,24 @@ import java.io.File
 
 fun main() {
 
-    val baseUrl = File("~/.cache-baseurl").readText()
-
-    HttpClients.createMinimal().use { client ->
-
-        val key = "testKey"
-
-        val resource = "cache?keys=$key&version=$key"
-
-        println("Env: ${System.getenv()}")
-
-        val url = "baseUrl$resource"
-
-        val result = client.execute(HttpGet(url)).use { response ->
-            println("Status code: ${response.statusLine.statusCode}")
-            response.entity.content.readAllBytes().decodeToString()
-
-        }
-        println("Body: $result")
-    }
+//    val baseUrl = File("~/.cache-baseurl").readText()
+//
+//    HttpClients.createMinimal().use { client ->
+//
+//        val key = "testKey"
+//
+//        val resource = "cache?keys=$key&version=$key"
+//
+//        println("Env: ${System.getenv()}")
+//
+//        val url = "baseUrl$resource"
+//
+//        val result = client.execute(HttpGet(url)).use { response ->
+//            println("Status code: ${response.statusLine.statusCode}")
+//            response.entity.content.readAllBytes().decodeToString()
+//
+//        }
+//        println("Body: $result")
+//    }
 
 }

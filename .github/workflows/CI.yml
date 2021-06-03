@@ -21,6 +21,17 @@ jobs:
         run: |
           chmod +x gradlew
 
+      - name: Cache Gradle packages and Konan
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-test-gradle-${{ hashFiles('**/settings.gradle*', 'buildSrc/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-test-gradle-
+            ${{ runner.os }}-publish-gradle-
+
       - name: Build
         run: './gradlew build'
 
@@ -28,6 +39,15 @@ jobs:
         uses: ./action/..
 
       - name: Print env
-        run: 'printenv'
+        run: 'ls -al ~'
+
       - name: Run
         run: './gradlew :cache:run'
+
+      - name: Stop gradle daemon
+        run: ./gradlew --stop
+
+      - name: Cleanup Gradle Cache
+        run: |
+          rm -f ~/.gradle/caches/*/*.lock
+          rm -f ~/.gradle/caches/*/gc.properties
