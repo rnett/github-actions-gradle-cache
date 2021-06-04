@@ -19,6 +19,12 @@ inputs:
   cache-key:
     description: "The cache key to use the the full cache, instead of the default"
     required: false
+  cache-key-prefix:
+    description: "A prefix for the cache key, even if it is the default.  Will be used in restore keys as well."
+    required: false
+  cache-key-postfix:
+    description: "A postfix for the cache key, even if it is the default."
+    required: false
   restore-keys:
     description: "Restore keys to use, if cache-key is specified"
     required: false

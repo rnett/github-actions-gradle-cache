@@ -57,12 +57,17 @@ private fun enableBuildCache() {
 private suspend fun cache(userKey: String?, userRestoreKeys: List<String>?, additionalPaths: List<String>) {
     log.info("Restoring full cache...")
 
-    val baseKeyParts = listOf(
+    val keyPrefix = inputs.getOptional("cache-key-prefix")?.ifBlank { null }
+    val keyPostfix = inputs.getOptional("cache-key-postfix")?.ifBlank { null }
+
+    val baseKeyParts = listOfNotNull(
+        keyPrefix,
         "gradle",
         "autocache",
         currentOS.name,
         github.context.workflow,
-        github.context.job
+        github.context.job,
+        keyPostfix
     )
 
     val key = userKey ?: (baseKeyParts + listOf(
@@ -80,11 +85,14 @@ private suspend fun cache(userKey: String?, userRestoreKeys: List<String>?, addi
     log.info("Using cache key $key")
 
     val restoreKeys = if (userKey == null)
-        listOf(
-            baseKeyParts.joinToString("-"),
-            baseKeyParts.dropLast(1).joinToString("-"),
-            baseKeyParts.dropLast(2).joinToString("-"),
-        )
+        buildList {
+            add(baseKeyParts.joinToString("-"))
+            add(baseKeyParts.dropLast(1).joinToString("-"))
+            add(baseKeyParts.dropLast(2).joinToString("-"))
+
+            if (keyPostfix != null)
+                baseKeyParts.dropLast(3).joinToString("-")
+        }
     else
         userRestoreKeys ?: emptyList()
 
@@ -115,7 +123,11 @@ private suspend fun cache(userKey: String?, userRestoreKeys: List<String>?, addi
     val usedKey = restoreCache(dirs, key, restoreKeys)
 
     if (usedKey != null) {
-        log.info("Cache hit on key $usedKey")
+        if (usedKey == key) {
+            log.info("Exact cache hit")
+        } else {
+            log.info("Cache hit on fallback key $usedKey")
+        }
         outputs["cache-hit"] = "true"
     } else {
         log.info("Cache miss")

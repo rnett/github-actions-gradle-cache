@@ -37,6 +37,9 @@ defaults for gradle, controlled by 4 more parameters (also all optional):
 
 * `full-cache` - whether to do this directory caching in addition to using the build cache. True by default.
 * `cache-key` - the key to use for the cache. By default, will be calculated as described below.
+* `cache-key-prefix` - a prefix for the key, if specified. Will be added to the default key as well.
+* `cache-key-postfix` - a prefix for the key, if specified. Will be added to the default key as well. Will be dropped
+  from restore keys.
 * `restore-keys` - restore keys to use if `cache-key` is specified.
 * `cache-paths` - More paths to cache (normal globs, not relative to `~/.gradle` or anywhere else).
 
@@ -55,9 +58,10 @@ Like `actions/cache`, it also has an output `cache-hit`.
 Files (including parts of the defaults) can be ignored by passing them to `cache-paths` starting with a `!`, the
 same `actions/cache`.
 
-If `cache-key` is not specified, it uses `gradle-autocache-$currentOS-$workflow-$jobId-$hash`, where `$hash` is a hash
-of `**/*.gradle*`, `**/buildSrc/src/**`, `**/*gradle.lockfile`, `**/gradle-wrapper.properties`,
-and `**/gradle.properties` using `hashFiles`. Restore keys omitting the hash, jobId, and workflow will be used.
+If `cache-key` is not specified, it uses `$prefix-gradle-autocache-$currentOS-$workflow-$jobId-$postfix-$hash`,
+where `$hash` is a hash of `**/*.gradle*`, `**/buildSrc/src/**`, `**/*gradle.lockfile`, `**/gradle-wrapper.properties`,
+and `**/gradle.properties` using `hashFiles`. Restore keys omitting the hash, jobId, workflow, and postfix will be used.
+Neither `$prefix` or `$postfix` will be included if not specified.
 
 Note that the cache upload task will also stop any gradle daemons and delete `.lock` and `gc.properties`, as
 recommend [here](https://github.com/actions/cache/blob/main/examples.md#java---gradle).
