@@ -32,7 +32,7 @@ class GHActionsBuildCacheService(baseUrl: String, token: String) : BuildCacheSer
     }
 
     override fun store(key: BuildCacheKey, writer: BuildCacheEntryWriter) {
-        logger.info("Storing $key in GitHub Actions cache")
+        logger.info("Saving $key in GitHub Actions cache")
         val cacheKey =
             key.hashCode + "_" + System.nanoTime() + "_" + System.currentTimeMillis() + "_" + random.nextLong()
         val id = repeatUntilNonNull(5) { client.reserveCache(cacheKey, key.hashCode) }

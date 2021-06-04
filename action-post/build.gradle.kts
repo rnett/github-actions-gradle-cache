@@ -6,16 +6,11 @@ plugins {
     id("com.github.gmazzo.buildconfig")
 }
 
-ext["pomName"] = "GH Action gradle cache setup action"
-description = "GitHub action to set up GitHub Actions gradle build cache"
+ext["pomName"] = "GH Action gradle cache post-run action"
+description = "GitHub action to save the glob cache"
 
 dependencies {
     implementation(project(":shared"))
-}
-
-buildConfig {
-    packageName("com.rnett.actions.cache")
-    buildConfigField("String", "VERSION", "\"${version.toString()}\"")
 }
 
 kotlin {

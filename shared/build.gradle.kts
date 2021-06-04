@@ -13,6 +13,13 @@ kotlin {
         }
     }
     js(IR) {
-        browser()
+        nodejs()
+    }
+    sourceSets {
+        val jsMain by getting {
+            dependencies {
+                api("com.github.rnett.ktjs-github-action:kotlin-js-action:1.2.1-SNAPSHOT")
+            }
+        }
     }
 }

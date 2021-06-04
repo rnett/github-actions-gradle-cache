@@ -1,10 +1,11 @@
 package com.rnett.actions.cache
 
 import com.rnett.action.Path
-import com.rnett.action.core.env
-import com.rnett.action.core.inputs
-import com.rnett.action.core.maskSecret
-import com.rnett.action.core.runOrFail
+import com.rnett.action.cache.cache.restoreCache
+import com.rnett.action.cache.cache.saveCache
+import com.rnett.action.core.*
+import com.rnett.action.currentOS
+import com.rnett.action.github.github
 
 private fun getInitScript(version: String, baseUrl: String, token: String, isPush: Boolean) =
     """
@@ -51,7 +52,72 @@ private fun enableBuildCache() {
         .append("org.gradle.caching=true")
 }
 
-fun main() = runOrFail {
+@OptIn(ExperimentalStdlibApi::class)
+private suspend fun cache(userKey: String?, userRestoreKeys: List<String>?, additionalPaths: List<String>) {
+
+    val baseKeyParts = listOf(
+        "gradle",
+        "autocache",
+        currentOS.name,
+        github.context.workflow,
+        github.context.job
+    )
+
+    val key = userKey ?: (baseKeyParts + listOf(
+        github.context.hashFiles(
+            listOf(
+                "**/*.gradle*",
+                "**/buildSrc/src/**",
+                "**/gradle-wrapper.properties",
+                "**/gradle.properties",
+                "**/*gradle.lockfile",
+            )
+        )
+    )).joinToString("-")
+
+    val restoreKeys = if (userKey == null)
+        listOf(
+            baseKeyParts.joinToString("-"),
+            baseKeyParts.dropLast(1).joinToString("-"),
+            baseKeyParts.dropLast(2).joinToString("-"),
+        )
+    else
+        userRestoreKeys ?: emptyList()
+
+    val dirs = buildList {
+        addAll(listOf(
+            "nodejs",
+            "wrapper",
+            "yarn",
+            "jdks",
+        ).map { "~/.gradle/$it" })
+
+        addAll(Path("~/.gradle/caches").takeIf { it.exists }?.children.orEmpty()
+            .filter { it.isDir && !it.name.startsWith("build-cache") }
+            .map {
+                "~/.gradle/caches/${it.name}"
+            })
+
+        add("~/.konan")
+
+        addAll(additionalPaths.filterNot { it.startsWith("!") })
+    }.minus(additionalPaths.filter { it.startsWith("!") }.map { it.removePrefix("!") })
+
+    saveCache(dirs, key)
+    val usedKey = restoreCache(dirs, key, restoreKeys)
+
+    if (usedKey != null) {
+        outputs["cache-hit"] = "true"
+    }
+
+    with(SharedState) {
+        cachePaths = dirs
+        exactMatch = (usedKey == key).toString()
+        primaryKey = key
+    }
+}
+
+suspend fun main() = runOrFail {
     val baseUrl = (
             env["ACTIONS_CACHE_URL"] ?: env["ACTIONS_RUNTIME_URL"] ?: error("Cache Service Url not found"))
         .replace("pipelines", "artifactcache") + "_apis/artifactcache/"
@@ -63,8 +129,18 @@ fun main() = runOrFail {
 
     val version = inputs.getOrElse("version") { "" }.ifBlank { BuildConfig.VERSION }
     val isPush = inputs.getOrElse("is-push") { "" }.ifBlank { "true" }
-    val enable = inputs.getOrElse("enable") { "" }.ifBlank { "true" }
+    val enable = inputs.getOrElse("use-build-cache") { "" }.ifBlank { "true" }
+
+    val fullCache = inputs.getOptional("full-cache")?.ifBlank { null }?.toBoolean() ?: true
+    val cacheKey = inputs["cache-key"].ifBlank { null }
+    val restoreKeys = inputs.getOptional("restore-keys")?.ifBlank { null }?.split("\n", ",")
+    val additionalPaths = inputs.getOptional("cache-paths")?.split("\n", ",").orEmpty()
+
     addInitScript(version, baseUrl, runtimeToken, isPush.toBoolean())
     if (enable.toBoolean())
         enableBuildCache()
+
+    SharedState.didCache = fullCache.toString()
+    if (fullCache)
+        cache(cacheKey, restoreKeys, additionalPaths)
 }

@@ -10,4 +10,4 @@ pluginManagement {
 
 rootProject.name = "github-actions-gradle-cache"
 
-include("shared", "action", "cache")
+include("shared", "action", "action-post", "cache")
