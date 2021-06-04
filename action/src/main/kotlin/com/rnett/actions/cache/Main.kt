@@ -57,6 +57,8 @@ private fun enableBuildCache() {
 @OptIn(ExperimentalStdlibApi::class)
 suspend fun newCache() {
 
+    println("Test: ${github.context.workflow} ${github.context.job}")
+
     val baseKeyParts = listOf<String>(
         "gradle",
         "auto",
@@ -64,15 +66,15 @@ suspend fun newCache() {
         currentOS.name,
         github.context.workflow,
         github.context.job,
-//        github.context.hashFiles(
-//            listOf(
-//                "**/*.gradle*",
-//                "**/buildSrc/src/**",
-//                "**/gradle-wrapper.properties",
-//                "**/gradle.properties",
-//                "**/*gradle.lockfile",
-//            )
-//        )
+        github.context.hashFiles(
+            listOf(
+                "**/*.gradle*",
+                "**/buildSrc/src/**",
+                "**/gradle-wrapper.properties",
+                "**/gradle.properties",
+                "**/*gradle.lockfile",
+            )
+        )
     )
 
     log.info("Base key parts: $baseKeyParts")
