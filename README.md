@@ -58,7 +58,7 @@ Like `actions/cache`, it also has an output `cache-hit`.
 Files (including parts of the defaults) can be ignored by passing them to `cache-paths` starting with a `!`, the
 same `actions/cache`.
 
-If `cache-key` is not specified, it uses `$prefix-gradle-autocache-$currentOS-$workflow-$jobId-$postfix-$hash`,
+If `cache-key` is not specified, it uses `$prefix-gradle-auto-cache-$currentOS-$workflow-$jobId-$postfix-$hash`,
 where `$hash` is a hash of `**/*.gradle*`, `**/buildSrc/src/**`, `**/*gradle.lockfile`, `**/gradle-wrapper.properties`,
 and `**/gradle.properties` using `hashFiles`. Restore keys omitting the hash, jobId, workflow, and postfix will be used.
 Neither `$prefix` or `$postfix` will be included if not specified.

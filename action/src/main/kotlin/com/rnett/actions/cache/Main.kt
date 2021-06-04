@@ -63,7 +63,8 @@ private suspend fun cache(userKey: String?, userRestoreKeys: List<String>?, addi
     val baseKeyParts = listOfNotNull(
         keyPrefix,
         "gradle",
-        "autocache",
+        "auto",
+        "cache",
         currentOS.name,
         github.context.workflow,
         github.context.job,
