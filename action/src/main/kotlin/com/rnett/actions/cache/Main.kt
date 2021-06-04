@@ -57,10 +57,6 @@ private fun enableBuildCache() {
 @OptIn(ExperimentalStdlibApi::class)
 suspend fun newCache() {
 
-    println("OS: ${currentOS.name}")
-    println("Workflow: ${github.context.workflow}")
-    println("Job: ${github.context.job}")
-
     val baseKeyParts = listOf<String>(
         "gradle",
         "auto",
@@ -68,15 +64,15 @@ suspend fun newCache() {
         currentOS.name,
         github.context.workflow,
         github.context.job,
-//        github.context.hashFiles(
-//            listOf(
-//                "**/*.gradle*",
-//                "**/buildSrc/src/**",
-//                "**/gradle-wrapper.properties",
-//                "**/gradle.properties",
-//                "**/*gradle.lockfile",
-//            )
-//        )
+        github.context.hashFiles(
+            listOf(
+                "**/*.gradle*",
+                "**/buildSrc/src/**",
+                "**/gradle-wrapper.properties",
+                "**/gradle.properties",
+                "**/*gradle.lockfile",
+            )
+        )
     )
 
     log.info("Base key parts: $baseKeyParts")
@@ -95,7 +91,6 @@ suspend fun newCache() {
 
     val fullRestoreKeys = inputs.getOptional("full-restore-keys").orEmpty().ifBlank {
         buildList {
-            add(baseKeyParts.joinToString("-"))
             add(baseKeyParts.dropLast(1).joinToString("-"))
             add(baseKeyParts.dropLast(2).joinToString("-"))
             add(baseKeyParts.dropLast(3).joinToString("-"))

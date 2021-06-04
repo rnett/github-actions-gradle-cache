@@ -194,8 +194,8 @@ class PiecewiseSharedCache(
     )
 
     companion object {
-        const val fullIndexVersion: String = "full-index"
-        private fun fullIndexKey(key: String) = "$fullIndexVersion-${currentOS.name}-$key"
+        private val fullIndexVersion: String = "full-index-${currentOS.name}"
+        private fun fullIndexKey(key: String) = "$fullIndexVersion-$key"
 
         suspend fun savePiecewiseCaches(
             fullKey: String,
