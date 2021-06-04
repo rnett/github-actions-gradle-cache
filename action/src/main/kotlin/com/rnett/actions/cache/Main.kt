@@ -59,6 +59,18 @@ suspend fun newCache() {
 
     println("Test: ${currentOS.name}, ${github.context.workflow} ${github.context.job}")
 
+    val fileHash = github.context.hashFiles(
+        listOf(
+            "**/*.gradle*",
+            "**/buildSrc/src/**",
+            "**/gradle-wrapper.properties",
+            "**/gradle.properties",
+            "**/*gradle.lockfile",
+        )
+    )
+
+    println("File hash $fileHash")
+
     val baseKeyParts = listOf<String>(
         "gradle",
         "auto",
@@ -66,15 +78,7 @@ suspend fun newCache() {
         currentOS.name,
         github.context.workflow,
         github.context.job,
-        github.context.hashFiles(
-            listOf(
-                "**/*.gradle*",
-                "**/buildSrc/src/**",
-                "**/gradle-wrapper.properties",
-                "**/gradle.properties",
-                "**/*gradle.lockfile",
-            )
-        )
+        fileHash
     )
 
     log.info("Base key parts: $baseKeyParts")
