@@ -203,6 +203,7 @@ class PiecewiseSharedCache(
             artifactKeyPrefix: String,
             restoredArtifacts: Set<Path>
         ) = supervisorScope {
+            log.info("piecewise caches: $piecewiseCaches")
             val cacheDirs = glob(piecewiseCaches)
 
             log.info("Saving ${cacheDirs.size} piecewise caches: ${cacheDirs.joinToString(", ")}")

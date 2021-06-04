@@ -9,7 +9,7 @@ object CacheClient {
     val cacheClient = CacheClient("Github Actions gradle cache")
     private val random = Random(Date.now().toLong())
 
-    private fun salt(): String = ""
+    private fun salt(): String = "-" + random.nextLong() + "-" + Date.now().toLong()
 
     suspend fun storeIfNew(file: Path, key: String, version: String): Boolean {
         require(file.isFile) { "Can't store a non-file" }
