@@ -24,7 +24,7 @@ object SharedState {
     var cacheState: Caching.CacheState
         get() = json.decodeFromString(cacheStateInternal)
         set(value) {
-            cachePathsInternal = json.encodeToString(value)
+            cacheStateInternal = json.encodeToString(value)
         }
 
 }

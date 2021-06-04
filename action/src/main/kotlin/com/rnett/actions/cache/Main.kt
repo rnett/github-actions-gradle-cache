@@ -75,10 +75,20 @@ suspend fun newCache() {
         )
     )
 
-    val fullCaches = inputs.getOptional("full-caches").orEmpty().ifBlank { Caching.gradleFullCaches.joinToString("\n") }
+    log.info("Base key parts: $baseKeyParts")
+
+    val fullCaches = inputs.getOptional("full-caches").orEmpty()
+        .ifBlank { Caching.gradleFullCaches.joinToString("\n") }
+        .split("\n", ",")
+
     val piecewiseCaches =
-        inputs.getOptional("piecewise-caches").orEmpty().ifBlank { Caching.gradlePiecewiseCaches.joinToString { "\n" } }
-    val fullKey = inputs.getOptional("full-key").orEmpty().ifBlank { baseKeyParts.joinToString("-") }
+        inputs.getOptional("piecewise-caches").orEmpty()
+            .ifBlank { Caching.gradlePiecewiseCaches.joinToString { "\n" } }
+            .split("\n", ",")
+
+    val fullKey = inputs.getOptional("full-key").orEmpty()
+        .ifBlank { baseKeyParts.joinToString("-") }
+
     val fullRestoreKeys = inputs.getOptional("full-restore-keys").orEmpty().ifBlank {
         buildList {
             add(baseKeyParts.joinToString("-"))
@@ -86,13 +96,19 @@ suspend fun newCache() {
             add(baseKeyParts.dropLast(2).joinToString("-"))
             add(baseKeyParts.dropLast(3).joinToString("-"))
         }.joinToString("\n")
-    }
+    }.split("\n", ",")
+
     val piecewiseKey = inputs.getOptional("piecewise-key").orEmpty().ifBlank { "gradle-auto-cache" }
+
+    log.info("Full key: $fullKey")
+    log.info("Full restore keys: ${fullRestoreKeys.joinToString(", ")}")
+    log.info("Piecewise key: $piecewiseKey")
+
     Caching.restoreAction(
-        fullCaches.split("\n"),
-        piecewiseCaches.split("\n"),
+        fullCaches,
+        piecewiseCaches,
         fullKey,
-        fullRestoreKeys.split("\n", ","),
+        fullRestoreKeys,
         piecewiseKey
     )
 }
