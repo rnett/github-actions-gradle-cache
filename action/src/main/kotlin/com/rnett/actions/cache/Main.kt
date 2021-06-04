@@ -2,7 +2,6 @@ package com.rnett.actions.cache
 
 import com.rnett.action.Path
 import com.rnett.action.cache.cache.restoreCache
-import com.rnett.action.cache.cache.saveCache
 import com.rnett.action.core.*
 import com.rnett.action.currentOS
 import com.rnett.action.github.github
@@ -112,9 +111,8 @@ private suspend fun cache(userKey: String?, userRestoreKeys: List<String>?, addi
 
     log.info("Caching files:\n${dirs.joinToString("\n") { "\t" + it }}")
 
-    saveCache(dirs, key)
-    val usedKey = restoreCache(dirs, key, restoreKeys)
 
+    val usedKey = restoreCache(dirs, key, restoreKeys)
 
     if (usedKey != null) {
         log.info("Cache hit on key $usedKey")
