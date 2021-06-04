@@ -132,7 +132,7 @@ suspend fun main() = runOrFail {
     val enable = inputs.getOrElse("use-build-cache") { "" }.ifBlank { "true" }
 
     val fullCache = inputs.getOptional("full-cache")?.ifBlank { null }?.toBoolean() ?: true
-    val cacheKey = inputs["cache-key"].ifBlank { null }
+    val cacheKey = inputs.getOptional("cache-key")?.ifBlank { null }
     val restoreKeys = inputs.getOptional("restore-keys")?.ifBlank { null }?.split("\n", ",")
     val additionalPaths = inputs.getOptional("cache-paths")?.split("\n", ",").orEmpty()
 
