@@ -41,12 +41,14 @@ private fun getInitScript(version: String, baseUrl: String, token: String, isPus
     """.trimIndent()
 
 private fun addInitScript(version: String, baseUrl: String, token: String, isPush: Boolean) {
+    log.info("Adding init script for GitHub actions build cache")
     Path("~/.gradle/init.d/gh_actions_cache.init.gradle.kts")
         .also { it.parent.mkdir() }
         .write(getInitScript(version, baseUrl, token, isPush))
 }
 
 private fun enableBuildCache() {
+    log.info("Enabling build cache for all projects")
     Path("~/.gradle/gradle.properties")
         .also { it.parent.mkdir() }
         .append("org.gradle.caching=true")
@@ -54,6 +56,7 @@ private fun enableBuildCache() {
 
 @OptIn(ExperimentalStdlibApi::class)
 private suspend fun cache(userKey: String?, userRestoreKeys: List<String>?, additionalPaths: List<String>) {
+    log.info("Restoring full cache...")
 
     val baseKeyParts = listOf(
         "gradle",
@@ -75,6 +78,8 @@ private suspend fun cache(userKey: String?, userRestoreKeys: List<String>?, addi
         )
     )).joinToString("-")
 
+    log.info("Using cache key $key")
+
     val restoreKeys = if (userKey == null)
         listOf(
             baseKeyParts.joinToString("-"),
@@ -83,6 +88,8 @@ private suspend fun cache(userKey: String?, userRestoreKeys: List<String>?, addi
         )
     else
         userRestoreKeys ?: emptyList()
+
+    log.info("With fallback key:\n${restoreKeys.joinToString("\n") { "\t" + it }}")
 
     val dirs = buildList {
         addAll(listOf(
@@ -103,11 +110,17 @@ private suspend fun cache(userKey: String?, userRestoreKeys: List<String>?, addi
         addAll(additionalPaths.filterNot { it.startsWith("!") })
     }.minus(additionalPaths.filter { it.startsWith("!") }.map { it.removePrefix("!") })
 
+    log.info("Caching files:\n${dirs.joinToString("\n") { "\t" + it }}")
+
     saveCache(dirs, key)
     val usedKey = restoreCache(dirs, key, restoreKeys)
 
+
     if (usedKey != null) {
+        log.info("Cache hit on key $usedKey")
         outputs["cache-hit"] = "true"
+    } else {
+        log.info("Cache miss")
     }
 
     with(SharedState) {

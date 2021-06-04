@@ -26,8 +26,9 @@ suspend fun main() = runOrFail {
         if (exact) {
             log.info("Exact cache hit occurred, not saving cache")
             return@runOrFail
+        } else {
+            log.info("Saving cache to $primaryKey")
+            cache.saveCache(paths, primaryKey)
         }
-
-        cache.saveCache(paths, primaryKey)
     }
 }
