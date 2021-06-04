@@ -57,6 +57,10 @@ private fun enableBuildCache() {
 @OptIn(ExperimentalStdlibApi::class)
 suspend fun newCache() {
 
+    println("OS: ${currentOS.name}")
+    println("Workflow: ${github.context.workflow}")
+    println("Job: ${github.context.job}")
+
     val baseKeyParts = listOf<String>(
         "gradle",
         "auto",
