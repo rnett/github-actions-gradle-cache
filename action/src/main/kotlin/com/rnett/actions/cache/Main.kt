@@ -64,6 +64,15 @@ suspend fun newCache() {
         currentOS.name,
         github.context.workflow,
         github.context.job,
+        github.context.hashFiles(
+            listOf(
+                "**/*.gradle*",
+                "**/buildSrc/src/**",
+                "**/gradle-wrapper.properties",
+                "**/gradle.properties",
+                "**/*gradle.lockfile",
+            )
+        )
     )
 
     val fullCaches = inputs.getOptional("full-caches").orEmpty().ifBlank { Caching.gradleFullCaches.joinToString("\n") }
@@ -75,6 +84,7 @@ suspend fun newCache() {
             add(baseKeyParts.joinToString("-"))
             add(baseKeyParts.dropLast(1).joinToString("-"))
             add(baseKeyParts.dropLast(2).joinToString("-"))
+            add(baseKeyParts.dropLast(3).joinToString("-"))
         }.joinToString("\n")
     }
     val piecewiseKey = inputs.getOptional("piecewise-key").orEmpty().ifBlank { "gradle-auto-cache" }
