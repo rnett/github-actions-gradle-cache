@@ -1,6 +1,10 @@
 package com.rnett.actions.cache
 
 import com.rnett.action.core.state
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+
 
 object SharedState {
     var didCache by state
@@ -14,4 +18,13 @@ object SharedState {
             cachePathsInternal = value.joinToString("|")
         }
     var exactMatch by state
+    private val json = Json { }
+
+    private var cacheStateInternal by state
+    var cacheState: Caching.CacheState
+        get() = json.decodeFromString(cacheStateInternal)
+        set(value) {
+            cachePathsInternal = json.encodeToString(value)
+        }
+
 }

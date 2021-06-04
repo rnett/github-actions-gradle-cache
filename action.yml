@@ -1,39 +1,54 @@
 name: 'Gradle GitHub Actions Cache'
 description: 'Installs a gradle build cache that uses GitHub Actions caching'
 inputs:
-  version:
-    description: "The version of com.github.rnett.github-actions-build-cache to use.  By default the same as this."
+  full-caches:
+    description: "Newline separated list of full cache globs"
     required: false
-  is-push:
-    description: "Whether to push to the GitHub Action cache"
-    default: 'true'
+  piecewise-caches:
+    description: "Newline seperated list of piecewise cache globs"
     required: false
-  use-build-cache:
-    description: "Whether to set org.gradle.caching=true"
-    default: 'true'
+  full-key:
+    description: "Full cache key, must be unique per piecewise cache absolute locations"
     required: false
-  full-cache:
-    description: "Whether to cache other gradle directories in addition to the build cache"
-    default: 'true'
+  full-restore-keys:
+    description: "Full restore keys"
     required: false
-  cache-key:
-    description: "The cache key to use the the full cache, instead of the default"
+  piecewise-key:
+    description: "Piecewise cache key.  Files will be shared between matching keys"
     required: false
-  cache-key-prefix:
-    description: "A prefix for the cache key, even if it is the default.  Will be used in restore keys as well."
-    required: false
-  cache-key-postfix:
-    description: "A postfix for the cache key, even if it is the default."
-    required: false
-  restore-keys:
-    description: "Restore keys to use, if cache-key is specified"
-    required: false
-  cache-paths:
-    description: "More paths to add to the full cache"
-    required: false
-outputs:
-  cache-hit:
-    description: "Whether the full cache was hit"
+#  version:
+#    description: "The version of com.github.rnett.github-actions-build-cache to use.  By default the same as this."
+#    required: false
+#  is-push:
+#    description: "Whether to push to the GitHub Action cache"
+#    default: 'true'
+#    required: false
+#  use-build-cache:
+#    description: "Whether to set org.gradle.caching=true"
+#    default: 'true'
+#    required: false
+#  full-cache:
+#    description: "Whether to cache other gradle directories in addition to the build cache"
+#    default: 'true'
+#    required: false
+#  cache-key:
+#    description: "The cache key to use the the full cache, instead of the default"
+#    required: false
+#  cache-key-prefix:
+#    description: "A prefix for the cache key, even if it is the default.  Will be used in restore keys as well."
+#    required: false
+#  cache-key-postfix:
+#    description: "A postfix for the cache key, even if it is the default."
+#    required: false
+#  restore-keys:
+#    description: "Restore keys to use, if cache-key is specified"
+#    required: false
+#  cache-paths:
+#    description: "More paths to add to the full cache"
+#    required: false
+#outputs:
+#  cache-hit:
+#    description: "Whether the full cache was hit"
 runs:
   using: 'node12'
   main: 'action/dist/index.js'

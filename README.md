@@ -64,4 +64,4 @@ and `**/gradle.properties` using `hashFiles`. Restore keys omitting the hash, jo
 Neither `$prefix` or `$postfix` will be included if not specified.
 
 Note that the cache upload task will also stop any gradle daemons and delete `.lock` and `gc.properties`, as
-recommend [here](https://github.com/actions/cache/blob/main/examples.md#java---gradle).
+recommend [here](https://docs.gradle.org/current/userguide/dependency_resolution.html#sub:cache_copy).

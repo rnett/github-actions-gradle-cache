@@ -11,7 +11,6 @@ description = "A gradle build cache service that uses GitHub Action's cache"
 dependencies {
     implementation(project(":shared"))
     implementation("org.apache.httpcomponents:httpclient:4.5.13")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.1")
 }
 
 kotlin {
