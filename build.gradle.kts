@@ -3,7 +3,7 @@ plugins {
     kotlin("js") version "1.5.10" apply false
     kotlin("multiplatform") version "1.5.10" apply false
     kotlin("plugin.serialization") version "1.5.10" apply false
-    id("com.github.rnett.ktjs-github-action") version "1.2.1-SNAPSHOT" apply false
+    id("com.github.rnett.ktjs-github-action") version "1.2.2-SNAPSHOT" apply false
     id("org.jetbrains.dokka") version "1.4.32" apply false
     id("com.vanniktech.maven.publish") version "0.15.1" apply false
     id("com.github.gmazzo.buildconfig") version "3.0.0" apply false
