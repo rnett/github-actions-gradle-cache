@@ -67,8 +67,6 @@ suspend fun newCache() {
         )
     )
 
-    println("File hash $fileHash")
-
     val baseKeyParts = listOf<String>(
         "gradle",
         "auto",
@@ -79,15 +77,15 @@ suspend fun newCache() {
         fileHash
     )
 
-    log.info("Base key parts: $baseKeyParts")
-
     val fullCaches = inputs.getOptional("full-caches").orEmpty()
         .ifBlank { Caching.gradleFullCaches.joinToString("\n") }
         .split("\n", ",")
 
+    println("Defaults: ${Caching.gradlePiecewiseCaches}")
+
     val piecewiseCaches =
         inputs.getOptional("piecewise-caches").orEmpty()
-            .ifBlank { Caching.gradlePiecewiseCaches.joinToString { "\n" } }
+            .ifBlank { Caching.gradlePiecewiseCaches.joinToString("\n") }
             .split("\n", ",")
 
     val fullKey = inputs.getOptional("full-key").orEmpty()
