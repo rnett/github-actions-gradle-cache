@@ -59,7 +59,8 @@ object Caching {
             restoreKeys,
             piecewiseKey
         )
-        SharedState.cacheState = CacheState(
+
+        val state = CacheState(
             fullCaches,
             piecewiseCaches,
             fullKey,
@@ -67,10 +68,16 @@ object Caching {
             piecewiseKey,
             restoredArtifacts
         )
+
+        log.info("Cache state: $state")
+
+        SharedState.cacheState = state
     }
 
     suspend fun saveAction() {
         val state = SharedState.cacheState
+
+        log.info("Cache state: $state")
 
         if (Path("./gradlew").isFile)
             exec.execCommand("./gradlew --stop")

@@ -57,8 +57,6 @@ private fun enableBuildCache() {
 @OptIn(ExperimentalStdlibApi::class)
 suspend fun newCache() {
 
-    println("Test: ${currentOS.name}, ${github.context.workflow} ${github.context.job}")
-
     val fileHash = github.context.hashFiles(
         listOf(
             "**/*.gradle*",
