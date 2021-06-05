@@ -69,15 +69,11 @@ object Caching {
             restoredArtifacts
         )
 
-        log.info("Cache state: $state")
-
         SharedState.cacheState = state
     }
 
     suspend fun saveAction() {
         val state = SharedState.cacheState
-
-        log.info("Cache state: $state")
 
         if (Path("./gradlew").isFile)
             exec.execCommand("./gradlew --stop")
@@ -211,7 +207,7 @@ class PiecewiseSharedCache(
             restoredArtifacts: Set<Path>
         ) = supervisorScope {
             log.info("piecewise caches: $piecewiseCaches")
-            val cacheDirs = glob(piecewiseCaches)
+            val cacheDirs = glob(piecewiseCaches, implicitDescendants = false)
 
             log.info("Saving ${cacheDirs.size} piecewise caches: ${cacheDirs.joinToString(", ")}")
 
